@@ -26,9 +26,11 @@
 # - PythonExtra_INCLUDE_DIRS: The paths to the directories where the Python
 #    headers are installed.
 # - PythonExtra_LIBRARIES: The paths to the Python libraries. Should be used 
-#    only by native executable embedding interpreter. Avoid in Python extension.
+#    only by native executable embedding interpreter. Avoid in Python extension on macOS and Linux.
 # - PythonExtra_LDFLAGS: Lazy linking flags of Python library exports. 
 #    Use this in Python extension. See rational below.
+# - PythonExtra_LIBRARIES_EXTENSION: Resolves to PythonExtra_LDFLAGS on macOS and Linux
+#    and PythonExtra_LIBRARIES on Windows
 #
 # Example usage:
 #
@@ -193,6 +195,12 @@ if(PYTHONINTERP_FOUND)
     set(PythonExtra_LDFLAGS)
   endif()
 
+  if (APPLE OR UNIX)
+    set(PythonExtra_LIBRARIES_EXTENSION ${PythonExtra_LDFLAGS})
+  else ()
+    set(PythonExtra_LIBRARIES_EXTENSION ${PythonExtra_LIBRARIES})
+  endif ()
+
   if(NOT DEFINED PYTHON_SOABI)
     set(_python_code
       "from sysconfig import get_config_var"
@@ -252,6 +260,7 @@ set(_required_vars
   PythonExtra_EXTENSION_EXTENSION
   PythonExtra_INCLUDE_DIRS
   PythonExtra_LIBRARIES
+  PythonExtra_LIBRARIES_EXTENSION
   PythonExtra_LDFLAGS)
 if(NOT WIN32)
   list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
