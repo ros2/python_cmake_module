@@ -145,6 +145,11 @@ if(PYTHONINTERP_FOUND)
         NO_SYSTEM_ENVIRONMENT_PATH
       )
 
+    endif()
+    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
+    message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
+
+    if(NOT DEFINED PythonExtra_LDFLAGS)
       # nm - llvm symbol table dumper
       execute_process(
         COMMAND nm "-extern-only" "-defined-only" "-just-symbol-name" ${PYTHON_LIBRARY}
@@ -167,8 +172,6 @@ if(PYTHONINTERP_FOUND)
 
       message(STATUS "Using PythonExtra_LDFLAGS: ${PythonExtra_LDFLAGS}")
     endif()
-    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
-    message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
   else()
     find_package(PythonLibs 3.5 REQUIRED)
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
