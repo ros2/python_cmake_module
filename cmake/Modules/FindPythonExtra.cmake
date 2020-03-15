@@ -251,7 +251,8 @@ include(FindPackageHandleStandardArgs)
 set(_required_vars
   PythonExtra_EXTENSION_EXTENSION
   PythonExtra_INCLUDE_DIRS
-  PythonExtra_LIBRARIES)
+  PythonExtra_LIBRARIES
+  PythonExtra_LDFLAGS)
 if(NOT WIN32)
   list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
