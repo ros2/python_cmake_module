@@ -147,9 +147,8 @@ if(PYTHONINTERP_FOUND)
 
       execute_process(
         COMMAND nm -gU ${PYTHON_LIBRARY}
-        COMMAND "cut" "-d" " " "-f" "3"
-        COMMAND xargs -I 1 echo -Wl,-U,1
-        OUTPUT_VARIABLE _lazy_link_flags
+        COMMAND cut "-d" " " "-f" "3"
+        OUTPUT_VARIABLE _symbols_table
         RESULT_VARIABLE _result
         OUTPUT_STRIP_TRAILING_WHITESPACE
       )
@@ -159,7 +158,7 @@ if(PYTHONINTERP_FOUND)
           "error code ${_result}")
       endif()
 
-      string(REPLACE "\n" ";" _lazy_link_flags_list "${_lazy_link_flags}")
+      string(REPLACE "\n" ";-Wl,-U," _lazy_link_flags_list "-Wl,-U,${_symbols_table}")
 
       set(PythonExtra_LDFLAGS
         "${_lazy_link_flags_list}"
