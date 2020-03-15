@@ -145,9 +145,9 @@ if(PYTHONINTERP_FOUND)
         NO_SYSTEM_ENVIRONMENT_PATH
       )
 
+      # nm - llvm symbol table dumper
       execute_process(
-        COMMAND nm -gU ${PYTHON_LIBRARY}
-        COMMAND cut "-d" " " "-f" "3"
+        COMMAND nm "-extern-only" "-defined-only" "-just-symbol-name" ${PYTHON_LIBRARY}
         OUTPUT_VARIABLE _symbols_table
         RESULT_VARIABLE _result
         OUTPUT_STRIP_TRAILING_WHITESPACE
