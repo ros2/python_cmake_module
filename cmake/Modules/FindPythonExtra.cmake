@@ -29,7 +29,7 @@
 #    only by native executable embedding interpreter. Avoid in Python extension on macOS and Linux.
 # - PythonExtra_LDFLAGS: Lazy linking flags of Python library exports. 
 #    Use this in Python extension. See rational below.
-# - PythonExtra_LIBRARIES_EXTENSION: Resolves to PythonExtra_LDFLAGS on macOS and Linux
+# - PythonExtra_EXTENSION_LIBRARIES: Resolves to PythonExtra_LDFLAGS on macOS and Linux
 #    and PythonExtra_LIBRARIES on Windows
 #
 # Example usage:
@@ -148,7 +148,8 @@ if(PYTHONINTERP_FOUND)
       )
 
     endif()
-    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
+    # set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
+    set(PythonExtra_LIBRARIES "++LinkFlagsNotlibPython++")
     message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
 
     if(NOT DEFINED PythonExtra_LDFLAGS)
@@ -168,7 +169,8 @@ if(PYTHONINTERP_FOUND)
       string(REPLACE "\n" ";-Wl,-U," _lazy_link_flags_list "-Wl,-U,${_symbols_table}")
 
       set(PythonExtra_LDFLAGS
-        "${_lazy_link_flags_list}"
+        # "${_lazy_link_flags_list}"
+        "-Wl,-U,SomeLazyPythonFuncs"
         CACHE INTERNAL
         "The libraries that need to be linked against for Python extensions.")
 
@@ -196,9 +198,9 @@ if(PYTHONINTERP_FOUND)
   endif()
 
   if (APPLE OR UNIX)
-    set(PythonExtra_LIBRARIES_EXTENSION ${PythonExtra_LDFLAGS})
+    set(PythonExtra_EXTENSION_LIBRARIES ${PythonExtra_LDFLAGS})
   else ()
-    set(PythonExtra_LIBRARIES_EXTENSION ${PythonExtra_LIBRARIES})
+    set(PythonExtra_EXTENSION_LIBRARIES ${PythonExtra_LIBRARIES})
   endif ()
 
   if(NOT DEFINED PYTHON_SOABI)
@@ -260,7 +262,7 @@ set(_required_vars
   PythonExtra_EXTENSION_EXTENSION
   PythonExtra_INCLUDE_DIRS
   PythonExtra_LIBRARIES
-  PythonExtra_LIBRARIES_EXTENSION
+  PythonExtra_EXTENSION_LIBRARIES
   PythonExtra_LDFLAGS)
 if(NOT WIN32)
   list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
