@@ -257,6 +257,12 @@ if(PYTHONINTERP_FOUND)
   set(PythonExtra_FOUND TRUE)
 endif()
 
+if(PythonExtra_FOUND AND NOT TARGET PythonExtra::Extension)
+  add_library(PythonExtra::Extension INTERFACE IMPORTED)
+  target_include_directories(PythonExtra::Extension INTERFACE ${PythonExtra_INCLUDE_DIRS})
+  target_link_libraries(PythonExtra::Extension INTERFACE ${PythonExtra_EXTENSION_LIBRARIES})
+  list(APPEND PythonExtra_TARGETS PythonExtra::Extension)
+endif()
 
 
 include(FindPackageHandleStandardArgs)
@@ -265,12 +271,15 @@ set(_required_vars
   PythonExtra_INCLUDE_DIRS
   PythonExtra_LIBRARIES
   PythonExtra_EXTENSION_LIBRARIES
-  PythonExtra_LDFLAGS)
+  PythonExtra_LDFLAGS
+  PythonExtra_TARGETS)
+
 if(NOT WIN32)
   list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
 endif()
+mark_as_advanced(${_required_vars})
 find_package_handle_standard_args(PythonExtra
   FOUND_VAR PythonExtra_FOUND
   REQUIRED_VARS ${_required_vars}
