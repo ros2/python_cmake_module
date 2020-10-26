@@ -151,35 +151,13 @@ if(PYTHONINTERP_FOUND)
 
     set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
     message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
-  else()
-    find_package(PythonLibs 3.5 REQUIRED)
-    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-      get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
-      get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
-      get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
-      set(_python_executable_debug "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
-      if(EXISTS "${_python_executable_debug}")
-        set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_debug}")
-      else()
-        message(FATAL_ERROR "${_python_executable_debug} doesn't exist")
-      endif()
-    endif()
-    message(STATUS "Using PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
-    message(STATUS "Using PYTHON_INCLUDE_DIRS: ${PYTHON_INCLUDE_DIRS}")
-    message(STATUS "Using PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
-    set(PythonExtra_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
-    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARIES}")
-    set(PythonExtra_LDFLAGS)
-  endif()
-
-  if (APPLE OR UNIX)
-    # Once all the projects are migrated to 
-    # set(PythonExtra_LIBRARIES "PythonExtra_LIBRARIES_is_deprecated_for_Unix_Platforms__Use_PythonExtra::Extension_target_instead___")
 
     if(NOT DEFINED PythonExtra_LDFLAGS)
       # nm - llvm symbol table dumper
+      find_program(SYMBOL_TABLE_DUMPER nm)
+
       execute_process(
-        COMMAND nm "-extern-only" "-defined-only" "-just-symbol-name" ${PYTHON_LIBRARY}
+        COMMAND ${SYMBOL_TABLE_DUMPER} "-extern-only" "-defined-only" "-just-symbol-name" ${PYTHON_LIBRARY}
         OUTPUT_VARIABLE _symbols_table
         RESULT_VARIABLE _result
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -201,9 +179,27 @@ if(PYTHONINTERP_FOUND)
     endif()
 
     set(PythonExtra_EXTENSION_LIBRARIES ${PythonExtra_LDFLAGS})
-  else ()
+  else()
+    find_package(PythonLibs 3.5 REQUIRED)
+    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+      get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
+      get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
+      get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
+      set(_python_executable_debug "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
+      if(EXISTS "${_python_executable_debug}")
+        set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_debug}")
+      else()
+        message(FATAL_ERROR "${_python_executable_debug} doesn't exist")
+      endif()
+    endif()
+    message(STATUS "Using PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
+    message(STATUS "Using PYTHON_INCLUDE_DIRS: ${PYTHON_INCLUDE_DIRS}")
+    message(STATUS "Using PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
+    set(PythonExtra_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARIES}")
+    set(PythonExtra_LDFLAGS "")
     set(PythonExtra_EXTENSION_LIBRARIES ${PythonExtra_LIBRARIES})
-  endif ()
+  endif()
 
   if(NOT DEFINED PYTHON_SOABI)
     set(_python_code
@@ -261,8 +257,10 @@ endif()
 
 if(PythonExtra_FOUND AND NOT TARGET PythonExtra::Extension)
   add_library(PythonExtra::Extension INTERFACE IMPORTED)
-  target_include_directories(PythonExtra::Extension INTERFACE ${PythonExtra_INCLUDE_DIRS})
-  target_link_libraries(PythonExtra::Extension INTERFACE ${PythonExtra_EXTENSION_LIBRARIES})
+  set_target_properties(PythonExtra::Extension PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${PythonExtra_INCLUDE_DIRS}
+    INTERFACE_LINK_LIBRARIES ${PythonExtra_EXTENSION_LIBRARIES})
+
   list(APPEND PythonExtra_TARGETS PythonExtra::Extension)
 endif()
 
@@ -273,7 +271,6 @@ set(_required_vars
   PythonExtra_INCLUDE_DIRS
   PythonExtra_LIBRARIES
   PythonExtra_EXTENSION_LIBRARIES
-  PythonExtra_LDFLAGS
   PythonExtra_TARGETS)
 
 if(NOT WIN32)
