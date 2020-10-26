@@ -258,8 +258,8 @@ endif()
 if(PythonExtra_FOUND AND NOT TARGET PythonExtra::Extension)
   add_library(PythonExtra::Extension INTERFACE IMPORTED)
   set_target_properties(PythonExtra::Extension PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES ${PythonExtra_INCLUDE_DIRS}
-    INTERFACE_LINK_LIBRARIES ${PythonExtra_EXTENSION_LIBRARIES})
+    INTERFACE_INCLUDE_DIRECTORIES "${PythonExtra_INCLUDE_DIRS}"
+    INTERFACE_LINK_LIBRARIES "${PythonExtra_EXTENSION_LIBRARIES}")
 
   list(APPEND PythonExtra_TARGETS PythonExtra::Extension)
 endif()
