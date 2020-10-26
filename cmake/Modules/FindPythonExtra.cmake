@@ -149,7 +149,7 @@ if(PYTHONINTERP_FOUND)
 
     endif()
     # set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
-    set(PythonExtra_LIBRARIES "++LinkFlagsNotlibPython++")
+    set(PythonExtra_LIBRARIES "++LinkFlagsNotlibPython++") #TODO:<AM> Replace with "${PYTHON_LIBRARY}"
     message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
 
     if(NOT DEFINED PythonExtra_LDFLAGS)
@@ -169,8 +169,8 @@ if(PYTHONINTERP_FOUND)
       string(REPLACE "\n" ";-Wl,-U," _lazy_link_flags_list "-Wl,-U,${_symbols_table}")
 
       set(PythonExtra_LDFLAGS
-        # "${_lazy_link_flags_list}"
-        "-Wl,-U,SomeLazyPythonFuncs"
+        "${_lazy_link_flags_list}"
+        # "-Wl,-U,SomeLazyPythonFuncs" #TODO:<AM> Replace with "${_lazy_link_flags_list}"
         CACHE INTERNAL
         "The libraries that need to be linked against for Python extensions.")
 
@@ -256,6 +256,8 @@ if(PYTHONINTERP_FOUND)
 
   set(PythonExtra_FOUND TRUE)
 endif()
+
+
 
 include(FindPackageHandleStandardArgs)
 set(_required_vars
