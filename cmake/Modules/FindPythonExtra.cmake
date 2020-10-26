@@ -148,6 +148,9 @@ if(PYTHONINTERP_FOUND)
       )
 
     endif()
+
+    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
+    message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
   else()
     find_package(PythonLibs 3.5 REQUIRED)
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
