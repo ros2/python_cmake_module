@@ -170,7 +170,6 @@ if(PYTHONINTERP_FOUND)
 
       set(PythonExtra_LDFLAGS
         "${_lazy_link_flags_list}"
-        # "-Wl,-U,SomeLazyPythonFuncs" #TODO:<AM> Replace with "${_lazy_link_flags_list}"
         CACHE INTERNAL
         "The libraries that need to be linked against for Python extensions.")
 
