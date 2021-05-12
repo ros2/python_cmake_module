@@ -25,7 +25,12 @@
 #    Linux and Mac OSX equals to ".so", on Windows to ".pyd"
 # - PythonExtra_INCLUDE_DIRS: The paths to the directories where the Python
 #    headers are installed.
-# - PythonExtra_LIBRARIES: The paths to the Python libraries.
+# - PythonExtra_LIBRARIES: The paths to the Python libraries. Should be used 
+#    only by native executable embedding interpreter. Avoid in Python extension on macOS and Linux.
+# - PythonExtra_LDFLAGS: Lazy linking flags of Python library exports. 
+#    Use this in Python extension. See rational below.
+# - PythonExtra_EXTENSION_LIBRARIES: Resolves to PythonExtra_LDFLAGS on macOS and Linux
+#    and PythonExtra_LIBRARIES on Windows
 #
 # Example usage:
 #
@@ -33,6 +38,22 @@
 #   find_package(PythonExtra MODULE)
 #   # use PythonExtra_* variables
 #
+
+# On Linux and macOS, it's better to (intentionally) not link against
+# `libpython`. The symbols will be resolved when the extension library
+# is loaded into a Python binary. This is preferable because you might
+# have several different installations of a given Python version (e.g. the
+# system-provided Python, and one that ships with a piece of commercial
+# software). In this way, the plugin will work with both versions, instead
+# of possibly importing a second Python library into a process that already
+# contains one (which will lead to a segfault).
+# Source: pybind11/docs/compiling.rst
+#
+# On Mac OS: ${PythonExtra_LDFLAGS} contains lazy linking flags for all `libpython` exports
+# this allows to avoid linking it directly and avoid usage of `-undefined dynamic_lookup`
+# flag that tells linker to ignore missing symbols when building the module, but
+# it will ignore all missing symbols, not just symbols from `libpython`,
+# thus masking valid build issues
 ###############################################################################
 
 # lint_cmake: -convention/filename, -package/stdargs
@@ -125,10 +146,39 @@ if(PYTHONINTERP_FOUND)
         ${_library_paths}
         NO_SYSTEM_ENVIRONMENT_PATH
       )
+
     endif()
 
     set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
     message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
+
+    if(NOT DEFINED PythonExtra_LDFLAGS)
+      # nm - llvm symbol table dumper
+      find_program(SYMBOL_TABLE_DUMPER nm)
+
+      execute_process(
+        COMMAND ${SYMBOL_TABLE_DUMPER} "-extern-only" "-defined-only" "-just-symbol-name" ${PYTHON_LIBRARY}
+        OUTPUT_VARIABLE _symbols_table
+        RESULT_VARIABLE _result
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      if(NOT _result EQUAL 0)
+        message(FATAL_ERROR
+          "execute_process(nm -gU ${PYTHON_LIBRARY}) returned "
+          "error code ${_result}")
+      endif()
+
+      string(REPLACE "\n" ";-Wl,-U," _lazy_link_flags_list "-Wl,-U,${_symbols_table}")
+
+      set(PythonExtra_LDFLAGS
+        "${_lazy_link_flags_list}"
+        CACHE INTERNAL
+        "The libraries that need to be linked against for Python extensions.")
+
+      message(STATUS "Using PythonExtra_LDFLAGS: ${PythonExtra_LDFLAGS}")
+    endif()
+
+    set(PythonExtra_EXTENSION_LIBRARIES ${PythonExtra_LDFLAGS})
   else()
     find_package(PythonLibs 3.5 REQUIRED)
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -147,6 +197,8 @@ if(PYTHONINTERP_FOUND)
     message(STATUS "Using PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
     set(PythonExtra_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
     set(PythonExtra_LIBRARIES "${PYTHON_LIBRARIES}")
+    set(PythonExtra_LDFLAGS "")
+    set(PythonExtra_EXTENSION_LIBRARIES ${PythonExtra_LIBRARIES})
   endif()
 
   if(NOT DEFINED PYTHON_SOABI)
@@ -203,16 +255,30 @@ if(PYTHONINTERP_FOUND)
   set(PythonExtra_FOUND TRUE)
 endif()
 
+if(PythonExtra_FOUND AND NOT TARGET PythonExtra::Extension)
+  add_library(PythonExtra::Extension INTERFACE IMPORTED)
+  set_target_properties(PythonExtra::Extension PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${PythonExtra_INCLUDE_DIRS}"
+    INTERFACE_LINK_LIBRARIES "${PythonExtra_EXTENSION_LIBRARIES}")
+
+  list(APPEND PythonExtra_TARGETS PythonExtra::Extension)
+endif()
+
+
 include(FindPackageHandleStandardArgs)
 set(_required_vars
   PythonExtra_EXTENSION_EXTENSION
   PythonExtra_INCLUDE_DIRS
-  PythonExtra_LIBRARIES)
+  PythonExtra_LIBRARIES
+  PythonExtra_EXTENSION_LIBRARIES
+  PythonExtra_TARGETS)
+
 if(NOT WIN32)
   list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
 endif()
+mark_as_advanced(${_required_vars})
 find_package_handle_standard_args(PythonExtra
   FOUND_VAR PythonExtra_FOUND
   REQUIRED_VARS ${_required_vars}
