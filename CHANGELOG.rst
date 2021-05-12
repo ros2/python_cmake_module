@@ -2,9 +2,6 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
-
 0.8.1 (2021-03-18)
 ------------------
 * Update maintainers (`#2 <https://github.com/ros2/python_cmake_module/issues/2>`_)
