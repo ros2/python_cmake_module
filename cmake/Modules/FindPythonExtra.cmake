@@ -17,211 +17,85 @@
 #
 # CMake module for providing extra information about the Python interpreter.
 #
+# Output Targets:
+# - PythonExtra::Interpreter - an executable target that will invoke a version of Python
+#     matching CMAKE_BUILD_TYPE on platforms where that matters
+#
 # Output variables:
-#
 # - PythonExtra_FOUND: True if a Python executable was found
-# - PythonExtra_EXTENSION_SUFFIX: The suffix for a Python extension, according
-#    to PEP-3149: https://www.python.org/dev/peps/pep-3149/
-# - PythonExtra_EXTENSION_EXTENSION: The extension for a Python extension. On
-#    Linux and Mac OSX equals to ".so", on Windows to ".pyd"
-# - PythonExtra_INCLUDE_DIRS: The paths to the directories where the Python
-#    headers are installed.
-# - PythonExtra_LIBRARIES: The paths to the Python libraries.
-# - PYTHON_SOABI: The shared library file name tag according to PEP-3149:
-#    https://www.python.org/dev/peps/pep-3149/
 #
-# Conditional output variables
-# - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
+# Advanced Output variables
+# - PythonExtra_EXECUTABLE: a path to a python interpreter
+# - PythonExtra_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
 #    then this will be a path to a debug build of the Python interpreter.
 #
 # Example usage:
 #
 #   find_package(python_cmake_module REQUIRED)
 #   find_package(PythonExtra MODULE)
-#   # use PythonExtra_* variables
+#   # use PythonExtra::Interpreter
+#
+# Note on Python3
+#   This module requires that `find_package(Python3 REQUIRED COMPONENTS Interpreter)` be called,
+#   and will call it if not present.
+#   If more components from FindPython3.cmake are needed, then find it manually before finding
+#   this module.
+#   Example:
+#
+#     find_package(python_cmake_module REQUIRED)
+#     find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
+#     find_package(PythonExtra MODULE)
+#     # use PythonExtra::Interpreter
 #
 ###############################################################################
 
 # lint_cmake: -convention/filename, -package/stdargs
 
-set(PythonExtra_FOUND FALSE)
+if(PythonExtra_FOUND)
+  return()
+endif()
 
-# Prevent find_package(PythonLibs) from getting confused.
-unset(PYTHON_LIBRARY)
+if(Python3_FOUND AND NOT TARGET Python3::Interpreter)
+  message(FATAL_ERROR "PythonExtra requires Python3 to be found with the Interpreter component")
+elseif(NOT Python3_FOUND)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+endif()
 
-find_package(PythonInterp 3.6 REQUIRED)
+get_target_property(PythonExtra_EXECUTABLE Python3::Interpreter IMPORTED_LOCATION)
 
-if(PYTHONINTERP_FOUND)
-  if(APPLE)
-    find_program(PYTHON_CONFIG_EXECUTABLE NAMES "python3-config")
-    if(NOT PYTHON_CONFIG_EXECUTABLE)
-      message(FATAL_ERROR "Cannot find python3-config executable")
-    endif()
+add_executable(PythonExtra::Interpreter IMPORTED)
+set_property(TARGET PythonExtra::Interpreter
+  PROPERTY IMPORTED_LOCATION "${PythonExtra_EXECUTABLE}")
 
-    if(NOT DEFINED PythonExtra_INCLUDE_DIRS)
-      execute_process(
-        COMMAND
-        "${PYTHON_CONFIG_EXECUTABLE}"
-        "--includes"
-        OUTPUT_VARIABLE _output
-        RESULT_VARIABLE _result
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
-      if(NOT _result EQUAL 0)
-        message(FATAL_ERROR
-          "execute_process(${PYTHON_CONFIG_EXECUTABLE} --includes) returned "
-          "error code ${_result}")
-      endif()
-
-      string(REPLACE " " ";" _output_list ${_output})
-
-      foreach(_includedir ${_output_list})
-        string(SUBSTRING "${_includedir}" 2 -1 _includedir)
-        list(APPEND PythonExtra_INCLUDE_DIRS "${_includedir}")
-      endforeach()
-    endif()
-    set(PythonExtra_INCLUDE_DIRS
-        ${PythonExtra_INCLUDE_DIRS}
-        CACHE INTERNAL
-        "The paths to the Python include directories.")
-    message(STATUS "Using PythonExtra_INCLUDE_DIRS: ${PythonExtra_INCLUDE_DIRS}")
-
-    if(NOT DEFINED PythonExtra_LIBRARIES)
-      execute_process(
-        COMMAND
-        "${PYTHON_CONFIG_EXECUTABLE}"
-        "--ldflags"
-        OUTPUT_VARIABLE _output
-        RESULT_VARIABLE _result
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
-      if(NOT _result EQUAL 0)
-        message(FATAL_ERROR
-          "execute_process(${PYTHON_CONFIG_EXECUTABLE} --ldflags) returned "
-          "error code ${_result}")
-      endif()
-
-      string(REPLACE " " ";" _output_list "${_output}")
-      set(PythonExtra_LIBRARIES
-        ""
-        CACHE INTERNAL
-        "The libraries that need to be linked against for Python extensions.")
-
-      set(_library_paths "")
-      foreach(_item ${_output_list})
-        string(REGEX MATCH "-L(.*)" _regex_match ${_item})
-        if(NOT _regex_match STREQUAL "")
-          string(SUBSTRING "${_regex_match}" 2 -1 _library_path)
-          list(APPEND _library_paths "${_library_path}")
-        endif()
-      endforeach()
-
-      set(_python_version_no_dots
-        "${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
-      set(_python_version
-        "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
-
-      find_library(PYTHON_LIBRARY
-        NAMES
-        python${_python_version_no_dots}
-        python${_python_version}mu
-        python${_python_version}m
-        python${_python_version}u
-        python${_python_version}
-        PATHS
-        ${_library_paths}
-        NO_SYSTEM_ENVIRONMENT_PATH
-      )
-    endif()
-
-    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARY}")
-    message(STATUS "Using PythonExtra_LIBRARIES: ${PythonExtra_LIBRARIES}")
-  else()
-    find_package(PythonLibs 3.5 REQUIRED)
-    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-      get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
-      get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
-      get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
-      set(_python_executable_debug "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
-      if(EXISTS "${_python_executable_debug}")
-        set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_debug}")
-      else()
-        message(FATAL_ERROR "${_python_executable_debug} doesn't exist")
-      endif()
-    endif()
-    message(STATUS "Using PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
-    message(STATUS "Using PYTHON_INCLUDE_DIRS: ${PYTHON_INCLUDE_DIRS}")
-    message(STATUS "Using PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
-    set(PythonExtra_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
-    set(PythonExtra_LIBRARIES "${PYTHON_LIBRARIES}")
+# Set the location to the debug interpretter on Windows if it exists
+if(WIN32)
+  get_target_property(PythonExtra_EXECUTABLE PythonExtra::Interpreter IMPORTED_LOCATION)
+  get_filename_component(_python_executable_dir "${PythonExtra_EXECUTABLE}" DIRECTORY)
+  get_filename_component(_python_executable_name "${PythonExtra_EXECUTABLE}" NAME_WE)
+  get_filename_component(_python_executable_ext "${PythonExtra_EXECUTABLE}" EXT)
+  set(PythonExtra_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
+  if(EXISTS "${PythonExtra_EXECUTABLE_DEBUG}")
+    set_target_property(PythonExtra::Interpreter IMPORTED_LOCATION_Debug "${PythonExtra_EXECUTABLE_DEBUG}")
+    set(PythonExtra_EXECUTABLE_DEBUG "${PythonExtra_EXECUTABLE_DEBUG}")
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(FATAL_ERROR "${PythonExtra_EXECUTABLE_DEBUG} doesn't exist and Debug build required")
   endif()
-
-  if(NOT DEFINED PYTHON_SOABI)
-    set(_python_code
-      "from sysconfig import get_config_var"
-      "print(get_config_var('SOABI'))"
-    )
-    execute_process(
-      COMMAND
-      "${PYTHON_EXECUTABLE}"
-      "-c"
-      "${_python_code}"
-      OUTPUT_VARIABLE _output
-      RESULT_VARIABLE _result
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    if(NOT _result EQUAL 0)
-      message(FATAL_ERROR
-        "execute_process(${PYTHON_EXECUTABLE} -c '${_python_code}') returned "
-        "error code ${_result}")
-    endif()
-
-    set(PYTHON_SOABI
-      "${_output}"
-      CACHE INTERNAL
-      "The SOABI suffix for Python native extensions. See PEP-3149: https://www.python.org/dev/peps/pep-3149/.")
-  endif()
-
-  if(PYTHON_SOABI STREQUAL "" OR PYTHON_SOABI STREQUAL "None")
-    set(PythonExtra_EXTENSION_SUFFIX
-      ""
-      CACHE INTERNAL
-      "The full suffix for Python native extensions. See PEP-3149: https://www.python.org/dev/peps/pep-3149/."
-    )
-  else()
-    set(PythonExtra_EXTENSION_SUFFIX
-      ".${PYTHON_SOABI}"
-      CACHE INTERNAL
-      "The full suffix for Python native extensions. See PEP-3149: https://www.python.org/dev/peps/pep-3149/."
-    )
-  endif()
-
-  if(WIN32)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(PythonExtra_EXTENSION_EXTENSION "_d.pyd")
-    else()
-      set(PythonExtra_EXTENSION_EXTENSION ".pyd")
-    endif()
-  else()
-    # Also use .so for OSX, not dylib
-    set(PythonExtra_EXTENSION_EXTENSION ".so")
-  endif()
-
-  set(PythonExtra_FOUND TRUE)
+  unset(_python_executable_dir)
+  unset(_python_executable_name)
+  unset(_python_executable_ext)
 endif()
 
 include(FindPackageHandleStandardArgs)
 set(_required_vars
-  PythonExtra_EXTENSION_EXTENSION
-  PythonExtra_INCLUDE_DIRS
-  PythonExtra_LIBRARIES
-  PYTHON_SOABI)
-if(NOT WIN32)
-  list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
+  PythonExtra_EXECUTABLE)
+if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  list(APPEND _required_vars PythonExra_EXECUTABLE_DEBUG)
 endif()
+# Use PythonExtra::Interpreter instead of these variables
+mark_as_advanced(
+  PythonExtra_EXECUTABLE
+  PythonExtra_EXECUTABLE_DEBUG)
 find_package_handle_standard_args(PythonExtra
-  FOUND_VAR PythonExtra_FOUND
   REQUIRED_VARS ${_required_vars}
 )
+unset(_required_vars)
