@@ -49,7 +49,7 @@ set(PythonExtra_FOUND FALSE)
 # Prevent find_package(PythonLibs) from getting confused.
 unset(PYTHON_LIBRARY)
 
-find_package(PythonInterp 3.5 REQUIRED)
+find_package(PythonInterp 3.6 REQUIRED)
 
 if(PYTHONINTERP_FOUND)
   if(APPLE)
