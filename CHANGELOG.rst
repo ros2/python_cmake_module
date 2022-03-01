@@ -2,8 +2,8 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.0 (2022-03-01)
+-------------------
 * require Python 3.6 as we use format strings in various places (`#10 <https://github.com/ros2/python_cmake_module/issues/10>`_)
 * Document all variables set by this module (`#5 <https://github.com/ros2/python_cmake_module/issues/5>`_)
 * Add changelog (`#4 <https://github.com/ros2/python_cmake_module/issues/4>`_)
