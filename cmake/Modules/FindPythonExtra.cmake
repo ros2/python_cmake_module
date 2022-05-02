@@ -44,6 +44,10 @@
 
 # lint_cmake: -convention/filename, -package/stdargs
 
+if(PythonExtra_FOUND)
+  return()
+endif()
+
 set(PythonExtra_FOUND FALSE)
 
 # Prevent find_package(PythonLibs) from getting confused.
@@ -225,3 +229,12 @@ find_package_handle_standard_args(PythonExtra
   FOUND_VAR PythonExtra_FOUND
   REQUIRED_VARS ${_required_vars}
 )
+if(PythonExtra_FOUND)
+    add_library(PythonExtra::PythonExtra INTERFACE IMPORTED)
+    set_target_properties(PythonExtra::PythonExtra PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${PythonExtra_INCLUDE_DIRS}"
+    )
+    set_target_properties(PythonExtra::PythonExtra PROPERTIES
+        INTERFACE_LINK_LIBRARIES "${PythonExtra_LIBRARIES}"
+    )
+endif()
