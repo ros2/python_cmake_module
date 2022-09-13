@@ -2,8 +2,8 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.1 (2022-09-13)
+-------------------
 * Mirror rolling to master
 * Contributors: Audrow Nash
 
