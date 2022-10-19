@@ -26,6 +26,8 @@
 # - PythonExtra_INCLUDE_DIRS: The paths to the directories where the Python
 #    headers are installed.
 # - PythonExtra_LIBRARIES: The paths to the Python libraries.
+# - PYTHON_MODULE_EXTENSION: The full module extension, as the suffix+extension.
+#    This is required for packages using pybind11 when crosscompiling.
 #
 # Example usage:
 #
@@ -219,3 +221,7 @@ find_package_handle_standard_args(PythonExtra
   FOUND_VAR PythonExtra_FOUND
   REQUIRED_VARS ${_required_vars}
 )
+
+if(DEFINED CMAKE_SYSROOT)
+  set(PYTHON_MODULE_EXTENSION ${PythonExtra_EXTENSION_SUFFIX}${PythonExtra_EXTENSION_EXTENSION})
+endif()
