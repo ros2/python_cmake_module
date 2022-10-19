@@ -19,6 +19,7 @@
 #
 # Output variables:
 #
+# - PythonExtra_FOUND: True if a Python executable was found
 # - PythonExtra_EXTENSION_SUFFIX: The suffix for a Python extension, according
 #    to PEP-3149: https://www.python.org/dev/peps/pep-3149/
 # - PythonExtra_EXTENSION_EXTENSION: The extension for a Python extension. On
@@ -26,8 +27,14 @@
 # - PythonExtra_INCLUDE_DIRS: The paths to the directories where the Python
 #    headers are installed.
 # - PythonExtra_LIBRARIES: The paths to the Python libraries.
+# - PYTHON_SOABI: The shared library file name tag according to PEP-3149:
+#    https://www.python.org/dev/peps/pep-3149/
 # - PYTHON_MODULE_EXTENSION: The full module extension, as the suffix+extension.
 #    This is required for packages using pybind11 when crosscompiling.
+#
+# Conditional output variables
+# - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
+#    then this will be a path to a debug build of the Python interpreter.
 #
 # Example usage:
 #
@@ -44,7 +51,7 @@ set(PythonExtra_FOUND FALSE)
 # Prevent find_package(PythonLibs) from getting confused.
 unset(PYTHON_LIBRARY)
 
-find_package(PythonInterp 3.5 REQUIRED)
+find_package(PythonInterp 3.6 REQUIRED)
 
 if(PYTHONINTERP_FOUND)
   if(APPLE)
@@ -211,7 +218,8 @@ include(FindPackageHandleStandardArgs)
 set(_required_vars
   PythonExtra_EXTENSION_EXTENSION
   PythonExtra_INCLUDE_DIRS
-  PythonExtra_LIBRARIES)
+  PythonExtra_LIBRARIES
+  PYTHON_SOABI)
 if(NOT WIN32)
   list(APPEND _required_vars PythonExtra_EXTENSION_SUFFIX)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")

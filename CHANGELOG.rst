@@ -2,6 +2,18 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.10.1 (2022-09-13)
+-------------------
+* Mirror rolling to master
+* Contributors: Audrow Nash
+
+0.10.0 (2022-03-01)
+-------------------
+* require Python 3.6 as we use format strings in various places (`#10 <https://github.com/ros2/python_cmake_module/issues/10>`_)
+* Document all variables set by this module (`#5 <https://github.com/ros2/python_cmake_module/issues/5>`_)
+* Add changelog (`#4 <https://github.com/ros2/python_cmake_module/issues/4>`_)
+* Contributors: Ivan Santiago Paunovic, Shane Loretz, William Woodall
+
 0.8.1 (2021-03-18)
 ------------------
 * Update maintainers (`#2 <https://github.com/ros2/python_cmake_module/issues/2>`_)
