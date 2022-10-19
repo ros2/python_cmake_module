@@ -12,6 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+###############################################################################
+#
+# CheckCrossCompilingSoabi function will exit the compilation early if we
+#   defined a CMAKE_SYSROOT but not the PYTHON_SOABI.
+#
+# Example usage:
+#
+#   CheckCrossCompilingSoabi()
+#
+###############################################################################
 function(CheckCrossCompilingSoabi)
   set(_python_code
     "from sysconfig import get_config_var"
