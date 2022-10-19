@@ -13,6 +13,10 @@
 # limitations under the License.
 
 function(CheckCrossCompilingSoabi)
+  set(_python_code
+    "from sysconfig import get_config_var"
+    "print(get_config_var('SOABI'))"
+  )
   if(NOT DEFINED PYTHON_SOABI AND DEFINED CMAKE_SYSROOT)
     message(FATAL_ERROR "We detected you defined a sysroot thus crosscompiling.\n"
       "You have to define the PYTHON_SOABI variable in the toolchain file, which looks like cpython-39-x86_64-linux-gnu or cpython-39-aarch64-linux-gnu.\n"
