@@ -154,6 +154,8 @@ if(PYTHONINTERP_FOUND)
       "from sysconfig import get_config_var"
       "print(get_config_var('SOABI'))"
     )
+    include(CheckCrossCompilingSoabi)
+    CheckCrossCompilingSoabi()
     execute_process(
       COMMAND
       "${PYTHON_EXECUTABLE}"
