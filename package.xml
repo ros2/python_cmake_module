@@ -6,6 +6,7 @@
   <description>Provide CMake module with extra functionality for Python.</description>
 
   <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>
+
   <license>Apache License 2.0</license>
 
   <author>Esteve Fernandez</author>
