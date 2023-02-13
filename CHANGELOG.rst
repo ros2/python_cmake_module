@@ -2,8 +2,8 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.2 (2023-02-13)
+-------------------
 * [rolling] Update maintainers - 2022-11-07 (`#13 <https://github.com/ros2/python_cmake_module/issues/13>`_)
 * Contributors: Audrow Nash
 
