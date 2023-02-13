@@ -2,6 +2,11 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [rolling] Update maintainers - 2022-11-07 (`#13 <https://github.com/ros2/python_cmake_module/issues/13>`_)
+* Contributors: Audrow Nash
+
 0.10.1 (2022-09-13)
 -------------------
 * Mirror rolling to master
