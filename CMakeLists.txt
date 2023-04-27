@@ -13,5 +13,8 @@ ament_package(
   CONFIG_EXTRAS "python_cmake_module-extras.cmake"
 )
 
+include(cmake/Modules/CheckCrossCompilingSoabi.cmake)
+CheckCrossCompilingSoabi()
+
 install(DIRECTORY cmake
   DESTINATION share/${PROJECT_NAME})

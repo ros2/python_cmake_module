@@ -29,6 +29,8 @@
 # - PythonExtra_LIBRARIES: The paths to the Python libraries.
 # - PYTHON_SOABI: The shared library file name tag according to PEP-3149:
 #    https://www.python.org/dev/peps/pep-3149/
+# - PYTHON_MODULE_EXTENSION: The full module extension, as the suffix+extension.
+#    This is required for packages using pybind11 when crosscompiling.
 #
 # Conditional output variables
 # - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
@@ -161,6 +163,8 @@ if(PYTHONINTERP_FOUND)
       "from sysconfig import get_config_var"
       "print(get_config_var('SOABI'))"
     )
+    include(CheckCrossCompilingSoabi)
+    CheckCrossCompilingSoabi()
     execute_process(
       COMMAND
       "${PYTHON_EXECUTABLE}"
@@ -225,3 +229,7 @@ find_package_handle_standard_args(PythonExtra
   FOUND_VAR PythonExtra_FOUND
   REQUIRED_VARS ${_required_vars}
 )
+
+if(DEFINED CMAKE_SYSROOT)
+  set(PYTHON_MODULE_EXTENSION ${PythonExtra_EXTENSION_SUFFIX}${PythonExtra_EXTENSION_EXTENSION})
+endif()
