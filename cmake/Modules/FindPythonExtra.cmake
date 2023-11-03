@@ -77,7 +77,7 @@ endif()
 set(_required_vars
   PythonExtra_EXECUTABLE)
 if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  list(APPEND _required_vars PythonExra_EXECUTABLE_DEBUG)
+  list(APPEND _required_vars PythonExtra_EXECUTABLE_DEBUG)
 endif()
 # Downstream users should use PythonExtra::Interpreter instead of these variables
 mark_as_advanced(
