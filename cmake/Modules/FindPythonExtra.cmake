@@ -25,8 +25,8 @@
 # - PythonExtra_FOUND: True if a Python executable was found
 #
 # Advanced Output variables
-# - PythonExtra_EXECUTABLE: a path to a python interpreter
-# - PythonExtra_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
+# - PYTHON_EXECUTABLE: a path to a python interpreter
+# - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
 #    then this will be a path to a debug build of the Python interpreter.
 #
 # Example usage:
@@ -50,7 +50,7 @@ endif()
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-get_target_property(PythonExtra_EXECUTABLE Python3::Interpreter LOCATION)
+get_target_property(PYTHON_EXECUTABLE Python3::Interpreter LOCATION)
 
 add_executable(PythonExtra::Interpreter IMPORTED)
 set_property(TARGET PythonExtra::Interpreter
@@ -58,16 +58,15 @@ set_property(TARGET PythonExtra::Interpreter
 
 # Set the location to the debug interpreter on Windows if it exists
 if(WIN32)
-  get_target_property(PythonExtra_EXECUTABLE PythonExtra::Interpreter LOCATION)
-  get_filename_component(_python_executable_dir "${PythonExtra_EXECUTABLE}" DIRECTORY)
-  get_filename_component(_python_executable_name "${PythonExtra_EXECUTABLE}" NAME_WE)
-  get_filename_component(_python_executable_ext "${PythonExtra_EXECUTABLE}" EXT)
-  set(PythonExtra_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
-  if(EXISTS "${PythonExtra_EXECUTABLE_DEBUG}")
-    set_target_property(PythonExtra::Interpreter IMPORTED_LOCATION_Debug "${PythonExtra_EXECUTABLE_DEBUG}")
+  get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
+  get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
+  get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
+  set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
+  if(EXISTS "${PYTHON_EXECUTABLE_DEBUG}")
+    set_target_property(PythonExtra::Interpreter IMPORTED_LOCATION_Debug "${PYTHON_EXECUTABLE_DEBUG}")
   elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(WARNING "${PythonExtra_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
-    unset(PythonExtra_EXECUTABLE_DEBUG)
+    message(WARNING "${PYTHON_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
+    unset(PYTHON_EXECUTABLE_DEBUG)
   endif()
   unset(_python_executable_dir)
   unset(_python_executable_name)
@@ -75,14 +74,14 @@ if(WIN32)
 endif()
 
 set(_required_vars
-  PythonExtra_EXECUTABLE)
+  PYTHON_EXECUTABLE)
 if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  list(APPEND _required_vars PythonExtra_EXECUTABLE_DEBUG)
+  list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
 endif()
 # Downstream users should use PythonExtra::Interpreter instead of these variables
 mark_as_advanced(
-  PythonExtra_EXECUTABLE
-  PythonExtra_EXECUTABLE_DEBUG)
+  PYTHON_EXECUTABLE
+  PYTHON_EXECUTABLE_DEBUG)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PythonExtra
