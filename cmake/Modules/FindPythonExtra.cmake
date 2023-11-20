@@ -25,9 +25,9 @@
 # - PythonExtra_FOUND: True if a Python executable was found
 #
 # Advanced Output variables
-# - PYTHON_EXECUTABLE: a path to a python interpreter
+# - PYTHON_EXECUTABLE: a path to a python interpreter (deprecated; new code should use PythonExtra::Interpreter)
 # - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
-#    then this will be a path to a debug build of the Python interpreter.
+#    then this will be a path to a debug build of the Python interpreter (deprecated; new code should use PythonExtra::Interpreter)
 #
 # Example usage:
 #
