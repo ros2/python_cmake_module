@@ -28,6 +28,7 @@
 # - PYTHON_EXECUTABLE: a path to a python interpreter (deprecated; new code should use PythonExtra::Interpreter)
 # - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
 #    then this will be a path to a debug build of the Python interpreter (deprecated; new code should use PythonExtra::Interpreter)
+# - PythonExtra_POSTFIX: a postfix that downstream consumers can use as the DEBUG_POSTFIX property to a target
 #
 # Example usage:
 #
@@ -56,6 +57,8 @@ add_executable(PythonExtra::Interpreter IMPORTED)
 set_property(TARGET PythonExtra::Interpreter
   PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE}")
 
+set(PythonExtra_POSTFIX "")
+
 # Set the location to the debug interpreter on Windows if it exists
 if(WIN32)
   get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
@@ -63,7 +66,13 @@ if(WIN32)
   get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
   set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
   if(EXISTS "${PYTHON_EXECUTABLE_DEBUG}")
+    # TODO(clalancette): In theory we should be able to set the IMPORTED_LOCATION_Debug property,
+    # and downstream users would automatically use that with the "Debug" configuration.
+    # In practice we've found that this doesn't work as advertised in
+    # https://cmake.org/cmake/help/latest/guide/importing-exporting/index.html#importing-libraries ,
+    # so we are overriding IMPORTED_LOCATION.
     set_property(TARGET PythonExtra::Interpreter PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE_DEBUG}")
+    set(PythonExtra_POSTFIX "_d")
   elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(WARNING "${PYTHON_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
     unset(PYTHON_EXECUTABLE_DEBUG)
@@ -81,7 +90,8 @@ endif()
 # Downstream users should use PythonExtra::Interpreter instead of these variables
 mark_as_advanced(
   PYTHON_EXECUTABLE
-  PYTHON_EXECUTABLE_DEBUG)
+  PYTHON_EXECUTABLE_DEBUG
+  PythonExtra_POSTFIX)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PythonExtra
