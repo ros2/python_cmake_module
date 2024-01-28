@@ -57,14 +57,18 @@ add_executable(PythonExtra::Interpreter IMPORTED)
 set_property(TARGET PythonExtra::Interpreter
   PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE}")
 
+set(_required_vars
+  PYTHON_EXECUTABLE)
+
 set(PythonExtra_POSTFIX "")
 
 # Set the location to the debug interpreter on Windows if it exists
-if(WIN32)
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
   get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
   get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
   set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
+  list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
   if(EXISTS "${PYTHON_EXECUTABLE_DEBUG}")
     # TODO(clalancette): In theory we should be able to set the IMPORTED_LOCATION_Debug property,
     # and downstream users would automatically use that with the "Debug" configuration.
@@ -73,7 +77,7 @@ if(WIN32)
     # so we are overriding IMPORTED_LOCATION.
     set_property(TARGET PythonExtra::Interpreter PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE_DEBUG}")
     set(PythonExtra_POSTFIX "_d")
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  else()
     message(WARNING "${PYTHON_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
     unset(PYTHON_EXECUTABLE_DEBUG)
   endif()
@@ -82,11 +86,6 @@ if(WIN32)
   unset(_python_executable_ext)
 endif()
 
-set(_required_vars
-  PYTHON_EXECUTABLE)
-if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
-endif()
 # Downstream users should use PythonExtra::Interpreter instead of these variables
 mark_as_advanced(
   PYTHON_EXECUTABLE
