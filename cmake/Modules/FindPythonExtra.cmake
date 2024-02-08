@@ -18,7 +18,7 @@
 # CMake module for providing extra information about the Python interpreter.
 #
 # Output Targets:
-# - PythonExtra::Interpreter - an executable target that will invoke a version of Python
+# - Python3::Interpreter - an executable target that will invoke a version of Python
 #     matching CMAKE_BUILD_TYPE on platforms where that matters
 #
 # Output variables:
@@ -38,8 +38,8 @@
 #
 # Note on FindPython3
 #   This module will `find_package(Python3 REQUIRED COMPONENTS Interpreter)`
-#   If more components from FindPython3.cmake are needed, then find them manually before
-#   or after finding this module.
+#   If more components from FindPython3.cmake are needed, then find them manually
+#   after finding this module.
 #
 ###############################################################################
 
@@ -53,40 +53,41 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 get_target_property(PYTHON_EXECUTABLE Python3::Interpreter LOCATION)
 
-add_executable(PythonExtra::Interpreter IMPORTED)
-set_property(TARGET PythonExtra::Interpreter
-  PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE}")
-
-set(_required_vars
-  PYTHON_EXECUTABLE)
+set(PYTHON_EXECUTABLE_DEBUG "${PYTHON_EXECUTABLE}")
 
 set(PythonExtra_POSTFIX "")
+
+set(_required_vars
+  PYTHON_EXECUTABLE
+  PYTHON_EXECUTABLE_DEBUG)
 
 # Set the location to the debug interpreter on Windows if it exists
 if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
   get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
   get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
-  set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
-  list(APPEND _required_vars PYTHON_EXECUTABLE_DEBUG)
-  if(EXISTS "${PYTHON_EXECUTABLE_DEBUG}")
-    # TODO(clalancette): In theory we should be able to set the IMPORTED_LOCATION_Debug property,
-    # and downstream users would automatically use that with the "Debug" configuration.
-    # In practice we've found that this doesn't work as advertised in
-    # https://cmake.org/cmake/help/latest/guide/importing-exporting/index.html#importing-libraries ,
-    # so we are overriding IMPORTED_LOCATION.
-    set_property(TARGET PythonExtra::Interpreter PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE_DEBUG}")
-    set(PythonExtra_POSTFIX "_d")
+  if (_python_executable_name MATCHES ".*_d")
+    # The interpreter name we found already includes _d.  We don't need to do any additional work.
+    set(PYTHON_EXECUTABLE_DEBUG "${PYTHON_EXECUTABLE}")
   else()
-    message(WARNING "${PYTHON_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
-    unset(PYTHON_EXECUTABLE_DEBUG)
+    set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
+    if(NOT EXISTS "${PYTHON_EXECUTABLE_DEBUG}")
+      message(WARNING "${PYTHON_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
+      unset(PYTHON_EXECUTABLE_DEBUG)
+    endif()
   endif()
+
+  set(Python3_EXECUTABLE "${PYTHON_EXECUTABLE_DEBUG}")
+  set_property(TARGET Python3::Interpreter PROPERTY IMPORTED_LOCATION "${PYTHON_EXECUTABLE_DEBUG}")
+
+  set(PythonExtra_POSTFIX "_d")
+
   unset(_python_executable_dir)
   unset(_python_executable_name)
   unset(_python_executable_ext)
 endif()
 
-# Downstream users should use PythonExtra::Interpreter instead of these variables
+# Downstream users should use Python3::Interpreter instead of these variables
 mark_as_advanced(
   PYTHON_EXECUTABLE
   PYTHON_EXECUTABLE_DEBUG
