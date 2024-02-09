@@ -25,16 +25,16 @@
 # - PythonExtra_FOUND: True if a Python executable was found
 #
 # Advanced Output variables
-# - PYTHON_EXECUTABLE: a path to a python interpreter (deprecated; new code should use PythonExtra::Interpreter)
+# - PYTHON_EXECUTABLE: a path to a python interpreter (deprecated; new code should use Python3::Interpreter)
 # - PYTHON_EXECUTABLE_DEBUG: If the CMAKE_BUILD_TYPE is Debug and WIN32 is true
-#    then this will be a path to a debug build of the Python interpreter (deprecated; new code should use PythonExtra::Interpreter)
+#    then this will be a path to a debug build of the Python interpreter (deprecated; new code should use Python3::Interpreter)
 # - PythonExtra_POSTFIX: a postfix that downstream consumers can use as the DEBUG_POSTFIX property to a target
 #
 # Example usage:
 #
 #   find_package(python_cmake_module REQUIRED)
 #   find_package(PythonExtra MODULE)
-#   # use PythonExtra::Interpreter
+#   # use Python3::Interpreter
 #
 # Note on FindPython3
 #   This module will `find_package(Python3 REQUIRED COMPONENTS Interpreter)`
@@ -66,8 +66,8 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   get_filename_component(_python_executable_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
   get_filename_component(_python_executable_name "${PYTHON_EXECUTABLE}" NAME_WE)
   get_filename_component(_python_executable_ext "${PYTHON_EXECUTABLE}" EXT)
-  if (_python_executable_name MATCHES ".*_d")
-    # The interpreter name we found already includes _d.  We don't need to do any additional work.
+  if(_python_executable_name MATCHES ".*_d")
+    # The interpreter name we found already includes _d.  We don't need to reconstruct it.
     set(PYTHON_EXECUTABLE_DEBUG "${PYTHON_EXECUTABLE}")
   else()
     set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
