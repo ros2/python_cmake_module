@@ -2,6 +2,9 @@
 Changelog for package python_cmake_module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.11.1 (2024-03-28)
 -------------------
 * Use FindPython3 instead of FindPythonInterp (`#7 <https://github.com/ros2/python_cmake_module/issues/7>`_)
