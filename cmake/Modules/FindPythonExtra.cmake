@@ -73,7 +73,8 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(PYTHON_EXECUTABLE_DEBUG "${_python_executable_dir}/${_python_executable_name}_d${_python_executable_ext}")
     if(NOT EXISTS "${PYTHON_EXECUTABLE_DEBUG}")
       message(WARNING "${PYTHON_EXECUTABLE_DEBUG} doesn't exist but a Windows Debug build requires it")
-      unset(PYTHON_EXECUTABLE_DEBUG)
+      # Fall back to the regular interpreter
+      set(PYTHON_EXECUTABLE_DEBUG "${PYTHON_EXECUTABLE}")
     endif()
   endif()
 
